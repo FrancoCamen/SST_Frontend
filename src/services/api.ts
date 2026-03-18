@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosResponse } from 'axios';
+import type { AxiosInstance } from 'axios';
 import type { 
   AuthResponse, 
   User, 
@@ -48,13 +48,17 @@ class ApiService {
 
     // Interceptor para manejar errores de autenticación
     this.api.interceptors.response.use(
-      (response: AxiosResponse) => response,
+      (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        const status = error.response?.status;
+        
+        if (status === 401 || status === 403) {
+          console.warn(`[Auth] Token inválido/expirado (${status}). Cerrando sesión...`);
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           window.location.href = '/login';
         }
+        
         return Promise.reject(this.handleError(error));
       }
     );

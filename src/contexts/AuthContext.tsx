@@ -223,8 +223,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error('No user data received from token refresh');
       }
-    } catch (error) {
-      console.warn('No se pudo validar el token silenciosamente.', error);
+    } catch (error: any) {
+        console.warn('No se pudo validar el token silenciosamente.', error);
+        
+        // ← AGREGAR ESTO:
+        if (error?.status === 401 || error?.status === 403 || error?.response?.status === 403) {
+        console.error('Token expirado o inválido en refresh → logout');
+        dispatch({ type: 'LOGOUT' });
+        }
     }
   };
 
