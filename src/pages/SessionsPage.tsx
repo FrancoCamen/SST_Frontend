@@ -79,7 +79,12 @@ export const SessionsPage: React.FC = () => {
         setError(msg);
         console.error('[SessionsPage] Critical Fetch Error:', err);
       } finally {
-        setIsLoading(false);
+        // AQUÍ ESTÁ LA MAGIA: 
+        // Agregamos un pequeño retardo de 400ms antes de quitar el estado de carga.
+        // Esto le da tiempo al navegador de procesar el CSS y evita el destello.
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 400);
       }
     };
 
