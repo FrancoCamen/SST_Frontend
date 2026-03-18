@@ -207,32 +207,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshToken = async () => {
     try {
-      const response = await apiService.getCurrentUser();
-      
-      const rawResponse = response as any;
-      const data = rawResponse.data?.data || rawResponse.data || rawResponse;
-      
-      if (data && data.userId) {
+        const response = await apiService.getCurrentUser();
+        
+        const rawResponse = response as any;
+        const data = rawResponse.data?.data || rawResponse.data || rawResponse;
+        
+        if (data && data.userId) {
         const userData: User = {
-          id: String(data.userId),
-          name: data.name,
-          email: data.email,
-          createdAt: state.user?.createdAt || new Date().toISOString() 
+            id: String(data.userId),
+            name: data.name,
+            email: data.email,
+            createdAt: state.user?.createdAt || new Date().toISOString()
         };
         dispatch({ type: 'SET_USER', payload: userData });
-      } else {
-        throw new Error('No user data received from token refresh');
-      }
+        }
     } catch (error: any) {
+        const status = error?.response?.status || error?.status;
         console.warn('No se pudo validar el token silenciosamente.', error);
         
-        // ← AGREGAR ESTO:
-        if (error?.status === 401 || error?.status === 403 || error?.response?.status === 403) {
-        console.error('Token expirado o inválido en refresh → logout');
+        // Si es 403 o 401 → logout inmediato
+        if (status === 401 || status === 403) {
+        console.error('Token inválido detectado en refresh → logout');
         dispatch({ type: 'LOGOUT' });
         }
     }
-  };
+    };
 
   const login = async (credentials: UserLoginRequest) => {
     try {

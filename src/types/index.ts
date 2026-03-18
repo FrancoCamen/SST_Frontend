@@ -51,10 +51,9 @@ export interface Session {
   endTime: string;
   durationMinutes: number;
   folderId: string;
-  userId: string;
+  folderName: string;
+  tags?: string[];
   createdAt: string;
-  folder?: Folder;
-  tags?: Tag[];
 }
 
 export interface SessionCreateRequest {
