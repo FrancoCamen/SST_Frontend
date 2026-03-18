@@ -18,12 +18,22 @@ export const FoldersPage: React.FC = () => {
     const fetchFolders = async () => {
       try {
         const response = await apiService.getFolders();
-        setFolders(response.data);
-      } catch (err) {
-        setError('Error al cargar las carpetas');
+        
+        // Extracción robusta: Buscamos el array sin importar la estructura de la respuesta
+        const rawResponse = response as any;
+        const data = rawResponse.data?.data || rawResponse.data || rawResponse;
+        
+        // Validamos que sea un array antes de guardarlo
+        setFolders(Array.isArray(data) ? data : []);
+        
+      } catch (err: any) {
+        setError(err.message || 'Error al cargar las carpetas');
         console.error('Failed to fetch folders:', err);
       } finally {
-        setIsLoading(false);
+        // Retardo controlado (Anti-FOUC) para permitir carga de estilos en Vercel
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 400);
       }
     };
 
@@ -39,7 +49,12 @@ export const FoldersPage: React.FC = () => {
 
     try {
       const response = await apiService.createFolder(newFolder);
-      setFolders([...folders, response.data]);
+      
+      // Extracción robusta para la nueva carpeta
+      const rawResponse = response as any;
+      const newFolderData = rawResponse.data?.data || rawResponse.data || rawResponse;
+
+      setFolders([...folders, newFolderData]);
       setNewFolder({ name: '', description: '' });
       setShowCreateModal(false);
     } catch (err) {
@@ -63,7 +78,11 @@ export const FoldersPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string): string => {
-    return format(new Date(dateString), 'dd MMM yyyy', { locale: es });
+    try {
+       return format(new Date(dateString), 'dd MMM yyyy', { locale: es });
+    } catch (err) {
+       return 'Fecha inválida';
+    }
   };
 
   const formatHours = (minutes: number): string => {
@@ -75,7 +94,7 @@ export const FoldersPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -92,14 +111,14 @@ export const FoldersPage: React.FC = () => {
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="btn-primary"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Nueva Carpeta
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="btn-secondary"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 Volver al Dashboard
               </button>
@@ -110,7 +129,7 @@ export const FoldersPage: React.FC = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
             <p className="text-red-600">{error}</p>
           </div>
         )}
@@ -127,7 +146,7 @@ export const FoldersPage: React.FC = () => {
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="btn-primary"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
             >
               <Plus className="h-5 w-5 mr-2" />
               Crear Primera Carpeta
@@ -202,7 +221,7 @@ export const FoldersPage: React.FC = () => {
                       e.stopPropagation();
                       navigate(`/folders/${folder.id}`);
                     }}
-                    className="w-full mt-4 flex items-center justify-center text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                    className="w-full mt-4 flex items-center justify-center text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
                   >
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Ver Detalles
@@ -267,7 +286,7 @@ export const FoldersPage: React.FC = () => {
                   value={newFolder.name}
                   onChange={(e) => setNewFolder({ ...newFolder, name: e.target.value })}
                   required
-                  className="input-field"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                   placeholder="Ej: Matemáticas, Inglés, Programación"
                 />
               </div>
@@ -281,7 +300,7 @@ export const FoldersPage: React.FC = () => {
                   value={newFolder.description}
                   onChange={(e) => setNewFolder({ ...newFolder, description: e.target.value })}
                   rows={3}
-                  className="input-field resize-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
                   placeholder="Describe el contenido de esta carpeta..."
                 />
               </div>
@@ -290,14 +309,14 @@ export const FoldersPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="btn-secondary flex-1"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={!newFolder.name.trim()}
-                  className="btn-primary flex-1"
+                  className="flex-1 px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Crear Carpeta
                 </button>
